@@ -27,7 +27,7 @@ class SettingsRepository(private val context: Context) {
     }
 
     suspend fun saveProviders(list: List<Provider>) {
-        context.dataStore.edit { it[keyProviders] = json.encodeToString<List<Provider>>(list) }
+        context.dataStore.edit { it[keyProviders] = json.encodeToString(ListSerializer(Provider.serializer()), list) }
     }
 
     suspend fun selectProvider(name: String) {
