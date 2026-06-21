@@ -1,0 +1,6 @@
+-keep,allowobfuscation,allowshrinking class kotlinx.serialization.** { *; }
+-keepattributes *Annotation*, InnerClasses
+-dontwarn kotlinx.serialization.**
+-keep,includedescriptorclasses class com.glassai.**$$serializer { *; }
+-keepclassmembers class com.glassai.** { *** Companion; }
+-keepclasseswithmembers class com.glassai.** { kotlinx.serialization.KSerializer serializer(...); }
