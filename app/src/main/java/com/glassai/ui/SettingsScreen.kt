@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.glassai.data.Provider
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,8 +30,11 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     var working by remember(providers) { mutableStateOf(providers) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("设置 · Providers") },
@@ -56,7 +60,13 @@ fun SettingsScreen(
                 )
             }
             item {
-                Button(onClick = { onSave(working) }, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = {
+                        onSave(working)
+                        scope.launch { snackbarHostState.showSnackbar("已保存") }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("保存")
                 }
             }
