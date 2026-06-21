@@ -1,5 +1,7 @@
 package com.glassai.ui
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,10 +16,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 
 private val BgColor = Color(0xFF212121)
 private val AssistantBg = Color(0xFF2A2A2A)
@@ -35,6 +40,12 @@ fun ChatScreen(
     onOpenSettings: () -> Unit
 ) {
     val listState = rememberLazyListState()
+
+    var showGlow by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(10_000)
+        showGlow = false
+    }
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1)
@@ -71,7 +82,7 @@ fun ChatScreen(
                 items(messages, key = { it.hashCode() }) { msg -> MessageRow(msg) }
             }
 
-            InputBar(busy = busy, onSend = onSend)
+            InputBar(busy = busy, showGlow = showGlow, onSend = onSend)
         }
     }
 }
@@ -96,48 +107,71 @@ private fun MessageRow(msg: UiMessage) {
 @Composable
 private fun InputBar(
     busy: Boolean,
+    showGlow: Boolean,
     onSend: (String) -> Unit
 ) {
     var input by remember { mutableStateOf("") }
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (showGlow) 1f else 0f,
+        animationSpec = tween(durationMillis = 800),
+        label = "glow"
+    )
 
-    Row(
+    Box(
         Modifier
             .fillMaxWidth()
             .background(BgColor)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
-        OutlinedTextField(
-            value = input,
-            onValueChange = { input = it },
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(24.dp)),
-            placeholder = { Text("发送消息…", color = Color.White.copy(alpha = 0.5f)) },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedContainerColor = InputBg,
-                unfocusedContainerColor = InputBg,
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent
-            ),
-            shape = RoundedCornerShape(24.dp),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-            maxLines = 4
-        )
-        Spacer(Modifier.width(8.dp))
-        FilledIconButton(
-            onClick = {
-                if (input.isNotBlank() && !busy) {
-                    onSend(input)
-                    input = ""
-                }
-            },
-            enabled = !busy,
-            colors = IconButtonDefaults.filledIconButtonColors(containerColor = AccentColor)
+        if (glowAlpha > 0f) {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .alpha(glowAlpha)
+                    .background(
+                        Brush.radialGradient(
+                            listOf(AccentColor.copy(alpha = 0.35f), Color.Transparent)
+                        ),
+                        shape = RoundedCornerShape(28.dp)
+                    )
+            )
+        }
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "发送")
+            OutlinedTextField(
+                value = input,
+                onValueChange = { input = it },
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp)),
+                placeholder = { Text("发送消息…", color = Color.White.copy(alpha = 0.5f)) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedContainerColor = InputBg,
+                    unfocusedContainerColor = InputBg,
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent
+                ),
+                shape = RoundedCornerShape(24.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                maxLines = 4
+            )
+            Spacer(Modifier.width(8.dp))
+            FilledIconButton(
+                onClick = {
+                    if (input.isNotBlank() && !busy) {
+                        onSend(input)
+                        input = ""
+                    }
+                },
+                enabled = !busy,
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = AccentColor)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "发送")
+            }
         }
     }
 }
