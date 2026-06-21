@@ -20,12 +20,13 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
+    signingConfig = signingConfigs.getByName("debug")
+    isMinifyEnabled = false
+    proguardFiles(
+        getDefaultProguardFile("proguard-android-optimize.txt"),
+        "proguard-rules.pro"
+    )
+}
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
